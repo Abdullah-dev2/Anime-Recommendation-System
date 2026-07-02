@@ -10,6 +10,8 @@ pinned: false
 
 # AniBot — AI Anime Recommendation System
 
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/Orsted0/Anime-recommender)
+
 AniBot is an AI-powered anime recommendation chatbot. Built with **FastAPI**, **LangGraph**, and **OpenRouter**, the system accepts natural-language requests (e.g., *"I want something dark and psychological like Death Note"*), extracts user preferences, queries MyAnimeList (Jikan API), and responds with formatted suggestions inside a dark-neon cyberpunk chat UI.
 
 ---
@@ -98,8 +100,9 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Once running, navigate to:
-*   **Web Application**: [http://localhost:8000](http://localhost:8000)
-*   **Swagger API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+*   **Live Demo (Hugging Face Spaces)**: [https://huggingface.co/spaces/Orsted0/Anime-recommender](https://huggingface.co/spaces/Orsted0/Anime-recommender)
+*   **Web Application (Local)**: [http://localhost:8000](http://localhost:8000)
+*   **Swagger API Documentation (Local)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
