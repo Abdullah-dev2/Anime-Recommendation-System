@@ -16,10 +16,16 @@
     height: 100%;
     background:
         radial-gradient(ellipse at 50% 0%, rgba(190, 18, 60, 0.12) 0%, transparent 60%),
-        radial-gradient(ellipse at 10% 90%, rgba(148, 163, 184, 0.02) 0%, transparent 50%),
+        radial-gradient(ellipse at 10% 90%, rgba(201, 168, 76, 0.02) 0%, transparent 50%),
         radial-gradient(circle at 80% 50%, rgba(190, 18, 60, 0.03) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
+  }
+
+  /* WCAG AA placeholder contrast (#7a8fa6 on #0e1017 ≈ 4.7:1) */
+  ::placeholder {
+    color: #7a8fa6 !important;
+    opacity: 1;
   }
 }
 
@@ -47,3 +53,34 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(190, 18, 60, 0.15) transparent;
 }
+
+/* Empty-state gentle float */
+@keyframes floatGently {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* Message fadeInUp */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+  animation: floatGently 3.5s ease-in-out infinite;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.2s ease-out forwards;
+}
+
+/* Welcome hero fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+

@@ -14,6 +14,7 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const chatInputSetterRef = useRef(null); // stores ChatInput's setInputValue
 
   // Initialize and load from local storage
   useEffect(() => {
@@ -346,9 +347,11 @@ export default function App() {
     }
   };
 
-  // Welcome page prompts click handler
+  // Welcome page prompts click handler — populates input field (user can review/edit)
   const handlePromptClick = (text) => {
-    handleSendMessage(text);
+    if (chatInputSetterRef.current) {
+      chatInputSetterRef.current(text);
+    }
   };
 
   return (
@@ -377,7 +380,7 @@ export default function App() {
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 space-y-4"
         >
-          <div className="max-w-3xl mx-auto w-full">
+          <div className="max-w-4xl mx-auto w-full">
             {activeSession && activeSession.messages.length > 0 ? (
               // Active chat message bubbles
               activeSession.messages.map((msg, idx) => (
@@ -385,61 +388,60 @@ export default function App() {
                   key={idx}
                   message={msg}
                   animeMetadata={animeMetadata}
+                  prevRole={idx > 0 ? activeSession.messages[idx - 1].role : null}
                 />
               ))
             ) : (
-              // Welcome Screen (when no messages yet)
-              <div className="flex flex-col gap-6 py-8 text-left animate-fadeIn">
-                <div className="flex gap-4 p-5 rounded-xl bg-bg-message-bot border border-crimson/20 border-l-[3px] border-l-crimson">
-                  <div className="w-[38px] h-[38px] rounded-lg flex items-center justify-center shrink-0 bg-bg-secondary border border-crimson/20 shadow-[0_0_10px_rgba(190,18,60,0.15)]">
-                    <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M50 10 L85 35 L85 70 L50 95 L15 70 L15 35 Z" stroke="var(--accent-crimson, #be123c)" strokeWidth="6" strokeLinejoin="round" fill="rgba(153, 27, 27, 0.25)"/>
-                      <circle cx="50" cy="50" r="10" fill="var(--accent-crimson, #be123c)"/>
-                      <path d="M35 48 L45 52 L50 48" stroke="white" strokeWidth="4" strokeLinecap="round"/>
-                      <path d="M65 48 L55 52 L50 48" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+              // Welcome Hero (when no messages yet)
+              <div className="flex flex-col items-center text-center gap-8 py-12 sm:py-16 animate-fadeIn">
+                {/* Large Hexagon Logo Mark */}
+                <div className="relative flex items-center justify-center">
+                  {/* Outer glow ring */}
+                  <div className="absolute w-28 h-28 rounded-full bg-crimson/[0.08] blur-2xl" />
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-bg-secondary border border-crimson/30 shadow-[0_0_32px_rgba(190,18,60,0.25)] ring-1 ring-crimson/10">
+                    <svg width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M50 8 L88 32 L88 68 L50 92 L12 68 L12 32 Z" stroke="var(--accent-crimson, #be123c)" strokeWidth="5" strokeLinejoin="round" fill="rgba(153, 27, 27, 0.2)"/>
+                      <circle cx="50" cy="50" r="12" fill="var(--accent-crimson, #be123c)"/>
+                      <path d="M33 47 L44 52 L50 46" stroke="white" strokeWidth="4.5" strokeLinecap="round"/>
+                      <path d="M67 47 L56 52 L50 46" stroke="white" strokeWidth="4.5" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  
-                  <div className="flex-1 space-y-3">
-                    <p className="text-text-primary text-base">
-                      Welcome, traveler of the anime realms. I am <strong className="font-bold text-white">AniBot</strong>, your guide through the shadows of story and animation.
-                    </p>
-                    <p className="text-text-secondary text-sm">
-                      Speak of the tales you wish to summon. Select one of the paths below or describe your desires:
-                    </p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                      <button
-                        onClick={() => handlePromptClick("I want something dark and psychological like Death Note")}
-                        className="p-3 text-left rounded-lg bg-bg-primary/40 border border-white/5 hover:border-crimson/40 hover:bg-crimson/[0.03] text-text-secondary hover:text-white transition-all duration-150 text-xs font-semibold cursor-pointer"
-                      >
-                        "I want something dark and psychological like Death Note"
-                      </button>
-                      <button
-                        onClick={() => handlePromptClick("Give me a fun comedy isekai")}
-                        className="p-3 text-left rounded-lg bg-bg-primary/40 border border-white/5 hover:border-crimson/40 hover:bg-crimson/[0.03] text-text-secondary hover:text-white transition-all duration-150 text-xs font-semibold cursor-pointer"
-                      >
-                        "Give me a fun comedy isekai"
-                      </button>
-                      <button
-                        onClick={() => handlePromptClick("Something emotional with great animation")}
-                        className="p-3 text-left rounded-lg bg-bg-primary/40 border border-white/5 hover:border-crimson/40 hover:bg-crimson/[0.03] text-text-secondary hover:text-white transition-all duration-150 text-xs font-semibold cursor-pointer"
-                      >
-                        "Something emotional with great animation"
-                      </button>
-                      <button
-                        onClick={() => handlePromptClick("Recommend a cyberpunk thriller with action")}
-                        className="p-3 text-left rounded-lg bg-bg-primary/40 border border-white/5 hover:border-crimson/40 hover:bg-crimson/[0.03] text-text-secondary hover:text-white transition-all duration-150 text-xs font-semibold cursor-pointer"
-                      >
-                        "Recommend a cyberpunk thriller with action"
-                      </button>
-                    </div>
-
-                    <p className="text-text-muted text-xs pt-1.5">
-                      What kind of anime are you looking for today? ⚔️
-                    </p>
-                  </div>
                 </div>
+
+                {/* Headline + Subtitle */}
+                <div className="space-y-2">
+                  <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                    What are you in the mood<br className="hidden sm:block" /> to watch?
+                  </h1>
+                  <p className="text-text-muted text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+                    Describe a vibe, a genre, a feeling — AniBot will summon your next obsession.
+                  </p>
+                </div>
+
+                {/* 2×3 Suggestion Chip Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-2xl">
+                  {[
+                    { emoji: '🔪', label: 'Something like Death Note', prompt: 'I want something dark and psychological like Death Note' },
+                    { emoji: '✨', label: 'Feel-good slice of life', prompt: 'Recommend a heartwarming feel-good slice of life anime' },
+                    { emoji: '💎', label: 'Underrated hidden gems', prompt: 'Show me underrated hidden gem anime most people haven\'t seen' },
+                    { emoji: '🌸', label: 'Fun comedy isekai', prompt: 'Give me a fun comedy isekai with a great cast' },
+                    { emoji: '🎬', label: 'Best of this season', prompt: 'What are the best anime from this current season?' },
+                    { emoji: '🤖', label: 'Cyberpunk & action', prompt: 'Recommend a cyberpunk thriller with great action scenes' },
+                  ].map(({ emoji, label, prompt }) => (
+                    <button
+                      key={label}
+                      onClick={() => handlePromptClick(prompt)}
+                      className="group flex items-center gap-3 p-3.5 text-left rounded-xl bg-bg-secondary/60 border border-white/[0.07] hover:border-crimson/40 hover:bg-crimson/[0.05] text-text-muted hover:text-text-primary transition-all duration-200 text-sm font-medium cursor-pointer"
+                    >
+                      <span className="text-xl shrink-0 group-hover:scale-110 transition-transform duration-150">{emoji}</span>
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-text-dark text-xs tracking-wide">
+                  Click a suggestion or type your own below ↓
+                </p>
               </div>
             )}
             
@@ -452,6 +454,7 @@ export default function App() {
         <ChatInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
+          onSetInputRef={(setter) => { chatInputSetterRef.current = setter; }}
         />
       </div>
     </div>

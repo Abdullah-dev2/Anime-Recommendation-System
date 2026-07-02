@@ -41,9 +41,19 @@ export default function RecommendationCard({ anime }) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 bg-bg-secondary/80 border border-white/[0.06] hover:border-crimson/40 rounded-xl p-4 my-4 shadow-md hover:shadow-glow/10 hover:-translate-y-[2px] transition-all duration-300 relative overflow-hidden group">
+    <div className="
+      flex flex-col sm:flex-row gap-4
+      bg-[#0b0d12] border border-gold/[0.18] hover:border-gold/40
+      rounded-xl p-4 my-6
+      shadow-card hover:shadow-cardHover
+      hover:-translate-y-[2px] transition-all duration-300
+      relative overflow-hidden group
+    ">
+      {/* Subtle top-edge gold shimmer */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+
       {/* Anime Cover Image */}
-      <div className="shrink-0 w-24 h-34 sm:w-[95px] sm:h-[135px] rounded-lg overflow-hidden border border-white/5 bg-bg-primary relative mx-auto sm:mx-0">
+      <div className="shrink-0 w-24 h-34 sm:w-[95px] sm:h-[135px] rounded-lg overflow-hidden border border-white/[0.06] bg-bg-primary relative mx-auto sm:mx-0">
         {anime.image_url ? (
           <img
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -63,17 +73,18 @@ export default function RecommendationCard({ anime }) {
 
       {/* Card Content */}
       <div className="flex-1 flex flex-col min-w-0 text-left">
-        {/* Card Header */}
+
+        {/* Card Header — Title (dominant) + MAL Score (secondary, top-right) */}
         <div className="flex justify-between items-start gap-3 mb-1.5">
-          <h3 className="text-base font-extrabold text-text-primary leading-snug tracking-tight group-hover:text-white transition-colors duration-150">
+          <h3 className="text-[17px] font-black text-white leading-snug tracking-tight group-hover:text-white transition-colors duration-150 flex-1 min-w-0">
             {anime.title || `Recommendation (ID: ${anime.id})`}
           </h3>
-          
-          {/* Crimson Score Badge */}
+
+          {/* MAL Score Badge — secondary, smaller, top-right */}
           {anime.score && (
-            <div className="inline-flex items-center bg-crimson/10 border border-crimson rounded-full px-2.5 py-0.5 shrink-0 shadow-[0_0_8px_rgba(190,18,60,0.15)]">
-              <span className="text-[9px] font-bold tracking-wider text-crimson-hover mr-1.5 uppercase">MAL</span>
-              <span className="text-xs font-extrabold text-text-primary">{Number(anime.score).toFixed(2)}</span>
+            <div className="inline-flex flex-col items-center bg-bg-secondary border border-white/10 rounded-md px-2 py-1 shrink-0 min-w-[42px]">
+              <span className="text-[8px] font-bold tracking-widest text-text-dark uppercase leading-none">MAL</span>
+              <span className="text-[11px] font-extrabold text-text-muted leading-tight mt-0.5">{Number(anime.score).toFixed(1)}</span>
             </div>
           )}
         </div>
@@ -81,11 +92,11 @@ export default function RecommendationCard({ anime }) {
         {/* Genre Tags */}
         {anime.genres && anime.genres.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            <span className="text-[9px] font-bold tracking-widest text-text-muted uppercase mr-1">Genres:</span>
+            <span className="text-[9px] font-bold tracking-widest text-text-dark uppercase mr-1">Genres:</span>
             {anime.genres.map((g, idx) => (
               <span
                 key={idx}
-                className="text-[10px] font-semibold text-text-secondary bg-white/[0.03] border border-white/5 hover:border-text-muted hover:bg-white/[0.08] px-1.5 py-0.5 rounded transition-all duration-150"
+                className="text-[10px] font-semibold text-text-muted bg-white/[0.07] border border-white/[0.14] hover:border-gold/30 hover:text-gold/80 hover:bg-white/[0.10] px-2 py-0.5 rounded transition-all duration-150"
               >
                 {g}
               </span>
@@ -97,37 +108,39 @@ export default function RecommendationCard({ anime }) {
         <div className="relative flex-1">
           <div
             ref={blurbRef}
-            className={`text-sm text-text-secondary leading-relaxed mb-3 ${isExpanded ? '' : 'line-clamp-3'}`}
+            className={`text-sm text-text-secondary leading-relaxed mb-1 ${isExpanded ? '' : 'line-clamp-3'}`}
           >
             {renderMarkdown(blurbText)}
           </div>
           
-          {/* Read More / Read Less Toggle */}
+          {/* Read More / Read Less — gold text link (secondary action) */}
           {(isOverflowing || isExpanded) && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-xs font-bold text-crimson-hover hover:text-white hover:underline transition-colors duration-150 mb-3 block text-left"
+              className="text-xs font-semibold text-gold underline underline-offset-2 hover:text-gold/70 transition-colors duration-150 mb-3 mt-1 block text-left"
             >
-              {isExpanded ? 'Read less' : 'Read more'}
+              {isExpanded ? 'Read less ↑' : 'Read more ↓'}
             </button>
           )}
         </div>
 
-        {/* MAL Profile Link Button */}
+        {/* Divider + MAL Profile Link — primary CTA, visually separated */}
         {anime.url && (
-          <a
-            href={anime.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 self-start text-xs font-bold text-text-primary bg-gradient-to-r from-crimson to-rose-950 border border-crimson/40 hover:border-crimson px-3 py-1.5 rounded hover:shadow-[0_4px_12px_rgba(190,18,60,0.3)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 cursor-pointer"
-          >
-            <span>MyAnimeList Profile</span>
-            <svg className="group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-transform duration-150" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </a>
+          <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <a
+              href={anime.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 self-start text-xs font-bold text-white bg-gradient-to-r from-crimson to-rose-950 border border-crimson/50 hover:border-crimson px-4 py-2 rounded-lg hover:shadow-glow hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 cursor-pointer tracking-wide"
+            >
+              <span>MyAnimeList Profile</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          </div>
         )}
       </div>
     </div>
