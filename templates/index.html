@@ -5,7 +5,15 @@
     <header class="app-header">
         <div class="header-content">
             <div class="logo-section">
-                <span class="logo-icon">🎌</span>
+                <!-- Gothic Crest Logo SVG -->
+                <svg class="logo-mark" width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 10 L85 35 L85 70 L50 95 L15 70 L15 35 Z" stroke="var(--accent-crimson)" stroke-width="5" stroke-linejoin="round" fill="rgba(153, 27, 27, 0.15)"/>
+                    <path d="M50 25 L75 42 L75 65 L50 82 L25 65 L25 42 Z" stroke="var(--accent-crimson)" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M50 25 L50 82" stroke="var(--accent-crimson)" stroke-width="2" stroke-dasharray="3 5"/>
+                    <circle cx="50" cy="50" r="8" fill="var(--accent-crimson)" class="logo-glow"/>
+                    <path d="M35 48 L45 52 L50 48" stroke="var(--text-primary)" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M65 48 L55 52 L50 48" stroke="var(--text-primary)" stroke-width="3" stroke-linecap="round"/>
+                </svg>
                 <h1>AniBot</h1>
             </div>
             <p class="tagline">Your AI Anime Recommendation Assistant</p>
@@ -14,17 +22,25 @@
 
     <main class="chat-container" id="chat-container">
         <div class="messages-wrapper" id="messages-wrapper">
-            <div class="message assistant-message">
-                <div class="message-avatar">🤖</div>
+            <div class="message assistant-message visible">
+                <div class="message-avatar">
+                    <!-- Crimson Gothic Crest SVG -->
+                    <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 10 L85 35 L85 70 L50 95 L15 70 L15 35 Z" stroke="var(--accent-crimson)" stroke-width="6" stroke-linejoin="round" fill="rgba(153, 27, 27, 0.25)"/>
+                        <circle cx="50" cy="50" r="10" fill="var(--accent-crimson)"/>
+                        <path d="M35 48 L45 52 L50 48" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M65 48 L55 52 L50 48" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <div class="message-content">
-                    <p>Hey there, anime fan! 🎬 I'm <strong>AniBot</strong>, your personal anime recommendation assistant.</p>
-                    <p>Tell me what you're in the mood for! You can say things like:</p>
+                    <p>Welcome, traveler of the anime realms. I am <strong>AniBot</strong>, your guide through the shadows of story and animation.</p>
+                    <p>Speak of the tales you wish to summon. For example:</p>
                     <ul>
                         <li>"I want something dark and psychological like Death Note"</li>
                         <li>"Give me a fun comedy isekai"</li>
                         <li>"Something emotional with great animation"</li>
                     </ul>
-                    <p>What kind of anime are you looking for today? ✨</p>
+                    <p>What kind of anime are you looking for today? ⚔️</p>
                 </div>
             </div>
         </div>
@@ -42,16 +58,16 @@
                     required
                 >
                 <button type="submit" id="send-button" title="Send message">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 50 L85 20 L50 85 L45 55 Z" stroke="currentColor" stroke-width="7" stroke-linejoin="round" fill="none"/>
+                        <path d="M85 20 L45 55" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
                     </svg>
                 </button>
             </div>
         </form>
         <div class="loading-indicator" id="loading-indicator">
             <div class="spinner"></div>
-            <span>AniBot is thinking...</span>
+            <span>Summoning recommendations...</span>
         </div>
     </footer>
 </div>

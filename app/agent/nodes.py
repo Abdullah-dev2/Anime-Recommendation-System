@@ -55,15 +55,18 @@ Return ONLY the JSON list of strings. No markdown code fences, no explanations, 
 
 RESPONSE_SYSTEM_PROMPT = """You are AniBot, an expert anime recommendation assistant. You speak enthusiastically about anime, use anime terminology naturally, and provide detailed, personalized recommendations based on user preferences.
 
-Format your response in markdown:
-- Use **bold** for anime titles
-- Use bullet points for listing recommendations
-- Include the MAL score when available
-- Provide a brief, compelling reason why each anime matches the user's request
-- Add a MyAnimeList link for each recommendation when a URL is available
-- Keep your tone warm, knowledgeable, and genuinely excited about great anime
-- Limit to the anime data provided — do not invent titles or data not in the context
-- IMPORTANT: When listing and recommending anime, only refer to the overarching franchise name (e.g. use **Re:Zero** or **Naruto**). Do NOT include any season or part numbers (like "Season 2", "Part 2", "3rd Season") in the headers or titles of the recommended items. Present recommendations as franchise-level suggestions.
+When recommending anime, you must present them as structured recommendation cards. For each anime you recommend from the provided list, output the recommendation exactly in this tag format:
+
+[RECOMMENDATION id="ANIME_ID"]
+Why you'll love it blurb goes here. Explain enthusiastically why this anime matches their request based on its themes, genres, or similarities, referencing their preferences.
+[/RECOMMENDATION]
+
+Rules:
+1. Do not use standard bullet points or markdown headings for the recommendations themselves. Wrap each recommendation in the [RECOMMENDATION id="..."]...[/RECOMMENDATION] tags.
+2. Put any conversational text (introductions, concluding thoughts) outside the tags.
+3. The `id` attribute MUST match the exact Jikan ID (from the data) of the anime.
+4. Keep your tone warm, knowledgeable, and excited about great anime.
+5. Limit to the anime data provided — do not invent titles, IDs, or data not in the context.
 
 If the anime data is empty or insufficient, politely acknowledge the limitation and suggest the user try different keywords."""
 
@@ -401,7 +404,8 @@ async def generate_response(state: dict) -> dict:
     for i, anime in enumerate(anime_results, 1):
         genres_str = ", ".join(anime.get("genres", []))
         anime_context_lines.append(
-            f"{i}. Title: {anime.get('title', 'Unknown')}\n"
+            f"{i}. ID: {anime.get('mal_id', 'Unknown')}\n"
+            f"   Title: {anime.get('title', 'Unknown')}\n"
             f"   Score: {anime.get('score', 'N/A')}/10\n"
             f"   Episodes: {anime.get('episodes', 'N/A')}\n"
             f"   Genres: {genres_str}\n"

@@ -47,6 +47,7 @@ async def chat(request: Request, body: ChatRequest):
             metadata_sent = False
             seed_ips = []
             filtered_titles = []
+            anime_results = []
             
             async for event in agent.astream_events(initial_state, version="v2"):
                 # Track node outputs to gather metadata
@@ -57,6 +58,8 @@ async def chat(request: Request, body: ChatRequest):
                             seed_ips = output["seed_ips"]
                         if "filtered_titles" in output:
                             filtered_titles = output["filtered_titles"]
+                        if "anime_results" in output:
+                            anime_results = output["anime_results"]
 
                 # Check for streaming tokens from stream_llm chain
                 if event["event"] == "on_chain_stream" and event["name"] == "stream_llm":
@@ -69,6 +72,7 @@ async def chat(request: Request, body: ChatRequest):
                                 "session_id": session_id,
                                 "seed_ips": seed_ips,
                                 "filtered_titles": filtered_titles,
+                                "anime_results": anime_results,
                             }
                             yield f"data: {json.dumps(meta_payload)}\n\n"
                             metadata_sent = True
@@ -87,6 +91,7 @@ async def chat(request: Request, body: ChatRequest):
                     "session_id": session_id,
                     "seed_ips": seed_ips,
                     "filtered_titles": filtered_titles,
+                    "anime_results": anime_results,
                 }
                 yield f"data: {json.dumps(meta_payload)}\n\n"
                 
