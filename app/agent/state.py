@@ -26,5 +26,11 @@ class AgentState(TypedDict):
     genres: list[str]
     mood: str
     similar_to: list[str]
+    seed_ips: list[str]
+    raw_retrieved_docs: list[dict]
     anime_results: list[dict]
+    filtered_titles: list[str]
+    search_limit: int
+    iteration: int
+    max_iterations: int
     http_client: object

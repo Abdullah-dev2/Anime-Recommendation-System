@@ -30,6 +30,14 @@ class ChatResponse(BaseModel):
         ...,
         description="The session identifier for this conversation.",
     )
+    seed_ips: list[str] = Field(
+        default_factory=list,
+        description="The core franchise/IP names extracted from the seed anime.",
+    )
+    filtered_titles: list[str] = Field(
+        default_factory=list,
+        description="The list of recommendation titles filtered out because they belong to the seed franchise.",
+    )
 
 
 class HealthResponse(BaseModel):

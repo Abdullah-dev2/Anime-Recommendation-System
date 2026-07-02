@@ -168,6 +168,26 @@
         appendMessage(userMessage, "user");
         setLoading(true);
 
+        // Create the assistant message element container for streaming
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message assistant-message";
+        const avatarDiv = document.createElement("div");
+        avatarDiv.className = "message-avatar";
+        avatarDiv.textContent = "🤖";
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        messagesWrapper.appendChild(messageDiv);
+        
+        // Show message bubble
+        requestAnimationFrame(function () {
+            messageDiv.classList.add("visible");
+        });
+        messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+
+        let accumulatedResponse = "";
+
         try {
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -181,20 +201,45 @@
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(function () {
-                    return { detail: "Unknown server error" };
-                });
-                throw new Error(errorData.detail || `Server error: ${response.status}`);
+                throw new Error(`Server returned HTTP ${response.status}`);
             }
 
-            const data = await response.json();
-            sessionId = data.session_id;
-            appendMessage(data.response, "assistant");
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop(); // Hold incomplete line
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line.startsWith("data: ")) continue;
+                    
+                    try {
+                        const payload = JSON.parse(line.slice(6));
+                        
+                        if (payload.type === "metadata") {
+                            sessionId = payload.session_id;
+                            console.log("Metadata received:", payload);
+                        } else if (payload.type === "token") {
+                            accumulatedResponse += payload.text;
+                            contentDiv.innerHTML = markdownToHtml(accumulatedResponse);
+                            messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+                        } else if (payload.type === "error") {
+                            throw new Error(payload.detail);
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse stream chunk:", line, e);
+                    }
+                }
+            }
         } catch (error) {
-            appendMessage(
-                `⚠️ **Error:** ${error.message}. Please try again.`,
-                "assistant"
-            );
+            contentDiv.innerHTML = markdownToHtml(`⚠️ **Error:** ${error.message}. Please try again.`);
         } finally {
             setLoading(false);
             messageInput.focus();
