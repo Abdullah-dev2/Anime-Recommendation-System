@@ -1,3 +1,13 @@
+---
+title: AniBot - Anime Recommendation System
+emoji: 🤖
+colorFrom: purple
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AniBot — AI Anime Recommendation System
 
 AniBot is an AI-powered anime recommendation chatbot. Built with **FastAPI**, **LangGraph**, and **OpenRouter**, the system accepts natural-language requests (e.g., *"I want something dark and psychological like Death Note"*), extracts user preferences, queries MyAnimeList (Jikan API), and responds with formatted suggestions inside a dark-neon cyberpunk chat UI.
