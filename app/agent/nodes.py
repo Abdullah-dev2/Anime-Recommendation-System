@@ -14,6 +14,10 @@ from app.services.openrouter import OPENROUTER_URL, call_openrouter
 
 logger = logging.getLogger(__name__)
 
+# Module-level shared HTTP client — never stored in LangGraph state so it is
+# never touched by the msgpack checkpointer.
+_http_client: httpx.AsyncClient = httpx.AsyncClient(timeout=30.0)
+
 EXTRACTION_SYSTEM_PROMPT = """You are a preference extraction engine. Given a user's message and conversation history about anime they want to watch, extract their cumulative active preferences as JSON.
 Combine preferences from the history and the latest message. For example, if they previously asked for "dark psychological like Death Note" and now say "add some comedy", you should extract both psychological and comedy. If they change their request completely (e.g., "no, actually give me a romance slice of life instead"), discard the old preferences in favor of the new ones.
 
@@ -75,7 +79,6 @@ If the anime data is empty or insufficient, politely acknowledge the limitation 
 async def extract_preferences(state: dict) -> dict:
     """Extract genre, mood, and comparison preferences from the user message via LLM."""
     user_message = state["user_message"]
-    http_client = state["http_client"]
 
     # Build history string of PREVIOUS turns only to give context to extraction
     history_str = ""
@@ -100,7 +103,7 @@ async def extract_preferences(state: dict) -> dict:
     ]
 
     try:
-        raw_response = await call_openrouter(messages, http_client)
+        raw_response = await call_openrouter(messages, _http_client)
 
         # Strip markdown code fences if present
         cleaned = raw_response.strip()
@@ -137,12 +140,11 @@ async def fetch_recommendations(state: dict) -> dict:
     """Fetch anime recommendations from Jikan API based on extracted genres."""
     genres = state.get("genres", [])
     limit = state.get("search_limit", 5)
-    http_client = state["http_client"]
 
     logger.info(f"Fetching recommendations with genres={genres}, limit={limit}")
     anime_results = await fetch_anime(
         genres=genres,
-        http_client=http_client,
+        http_client=_http_client,
         limit=limit,
     )
 
@@ -153,7 +155,6 @@ async def extract_seed_anime(state: dict) -> dict:
     """Extract base franchise or IP names from the user query and similar_to list."""
     similar_to = state.get("similar_to", [])
     user_message = state["user_message"]
-    http_client = state["http_client"]
 
     if not similar_to and not user_message:
         return {"seed_ips": []}
@@ -169,7 +170,7 @@ async def extract_seed_anime(state: dict) -> dict:
     ]
 
     try:
-        raw_response = await call_openrouter(messages, http_client)
+        raw_response = await call_openrouter(messages, _http_client)
         cleaned = raw_response.strip()
         if cleaned.startswith("```"):
             cleaned = cleaned.split("\n", 1)[-1]
@@ -415,7 +416,6 @@ async def generate_response(state: dict) -> dict:
     mood = state.get("mood", "")
     similar_to = state.get("similar_to", [])
     anime_results = state.get("anime_results", [])
-    http_client = state["http_client"]
 
     # Build context block from anime data
     anime_context_lines = []
@@ -456,7 +456,7 @@ async def generate_response(state: dict) -> dict:
     llm_messages.append({"role": "user", "content": user_prompt})
 
     response_text = ""
-    async for chunk in stream_llm.astream({"messages": llm_messages, "http_client": http_client}):
+    async for chunk in stream_llm.astream({"messages": llm_messages, "http_client": _http_client}):
         response_text += chunk
 
     return {

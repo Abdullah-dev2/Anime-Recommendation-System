@@ -1,6 +1,5 @@
 """LangGraph graph compilation and execution entry point."""
 
-import httpx
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
@@ -67,7 +66,6 @@ agent = workflow.compile(checkpointer=MemorySaver())
 async def run_agent(
     user_message: str,
     session_id: str,
-    http_client: httpx.AsyncClient,
 ) -> dict:
     """
     Execute the recommendation agent pipeline for a single user message.
@@ -75,7 +73,6 @@ async def run_agent(
     Args:
         user_message: The raw user input string.
         session_id: UUID string for session tracking.
-        http_client: Shared httpx.AsyncClient for all HTTP calls.
 
     Returns:
         A dictionary containing the generated response, extracted seed IPs, and filtered titles.
@@ -94,7 +91,6 @@ async def run_agent(
         "search_limit": 5,
         "iteration": 0,
         "max_iterations": 3,
-        "http_client": http_client,
     }
 
     result = await agent.ainvoke(initial_state)

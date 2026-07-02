@@ -24,8 +24,6 @@ logger = logging.getLogger(__name__)
 async def chat(request: Request, body: ChatRequest):
     """Process a chat message through the LangGraph agent pipeline and stream output."""
     session_id = body.session_id if body.session_id else str(uuid.uuid4())
-    http_client = request.app.state.http_client
-
     config = {"configurable": {"thread_id": session_id}}
 
     # Pre-populate checkpoint memory if empty but client has history (recovers state after server restarts)
@@ -54,7 +52,6 @@ async def chat(request: Request, body: ChatRequest):
         "search_limit": 5,
         "iteration": 0,
         "max_iterations": 3,
-        "http_client": http_client,
     }
 
     async def sse_generator():

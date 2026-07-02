@@ -17,7 +17,6 @@ class AgentState(TypedDict):
         mood: Extracted mood/tone preference (e.g., "dark", "uplifting").
         similar_to: Anime titles the user referenced for comparison.
         anime_results: Normalized anime data fetched from Jikan or mock fallback.
-        http_client: Shared httpx.AsyncClient instance (passed through state).
     """
 
     messages: Annotated[list[AnyMessage], add_messages]
@@ -33,4 +32,3 @@ class AgentState(TypedDict):
     search_limit: int
     iteration: int
     max_iterations: int
-    http_client: object
