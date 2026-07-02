@@ -3,6 +3,19 @@
 from pydantic import BaseModel, Field
 
 
+class ChatMessage(BaseModel):
+    """Schema for a single message in the chat history."""
+
+    role: str = Field(
+        ...,
+        description="The role of the message author, either 'user' or 'assistant'.",
+    )
+    content: str = Field(
+        ...,
+        description="The text content of the message.",
+    )
+
+
 class ChatRequest(BaseModel):
     """Request body for POST /api/chat."""
 
@@ -16,6 +29,10 @@ class ChatRequest(BaseModel):
     session_id: str = Field(
         default="",
         description="Optional session identifier. If empty, a new UUID is generated server-side.",
+    )
+    history: list[ChatMessage] = Field(
+        default_factory=list,
+        description="List of previous messages in the conversation for session state recovery.",
     )
 
 

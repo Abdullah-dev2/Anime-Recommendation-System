@@ -1,12 +1,19 @@
 /**
  * AniBot Chat Application - Vanilla JS
- * Handles message sending, response rendering, and UI state management.
+ * Handles message sending, response rendering, and UI state management with persistent history.
  */
 
 (function () {
     "use strict";
 
     // DOM Elements
+    const layoutWrapper = document.getElementById("layout-wrapper");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+    const sidebarCloseBtn = document.getElementById("sidebar-close-btn");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+    const newChatBtn = document.getElementById("new-chat-btn");
+    const sessionsList = document.getElementById("sessions-list");
     const chatForm = document.getElementById("chat-form");
     const messageInput = document.getElementById("message-input");
     const sendButton = document.getElementById("send-button");
@@ -17,13 +24,11 @@
     let sessionId = "";
     let isLoading = false;
     let animeMetadata = {}; // key: mal_id (string), value: anime object
+    let sessions = []; // array of session objects: { id, title, timestamp, messages: [{role, content}] }
 
     /**
      * Parse the response text to extract [RECOMMENDATION] blocks and convert
      * them into rich Gothic-themed card components using loaded metadata.
-     */
-    /**
-     * Parse the response text into structured blocks of text and recommendations.
      */
     function parseResponseToBlocks(text) {
         if (!text) return [];
@@ -284,9 +289,9 @@
     }
 
     /**
-     * Create and append a message bubble to the chat.
+     * Create and append a message bubble in the DOM (used for initial load and rendering state).
      */
-    function appendMessage(content, role) {
+    function appendMessageBubbleToDom(content, role) {
         const messageDiv = document.createElement("div");
         messageDiv.className = `message ${role}-message`;
 
@@ -338,6 +343,43 @@
     }
 
     /**
+     * Renders the default welcome assistant message.
+     */
+    function renderInitialWelcome() {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message assistant-message visible";
+        
+        const avatarDiv = document.createElement("div");
+        avatarDiv.className = "message-avatar";
+        avatarDiv.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 10 L85 35 L85 70 L50 95 L15 70 L15 35 Z" stroke="var(--accent-crimson)" stroke-width="6" stroke-linejoin="round" fill="rgba(153, 27, 27, 0.25)"/>
+                <circle cx="50" cy="50" r="10" fill="var(--accent-crimson)"/>
+                <path d="M35 48 L45 52 L50 48" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                <path d="M65 48 L55 52 L50 48" stroke="white" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        `;
+        
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+        contentDiv.innerHTML = `
+            <p>Welcome, traveler of the anime realms. I am <strong>AniBot</strong>, your guide through the shadows of story and animation.</p>
+            <p>Speak of the tales you wish to summon. For example:</p>
+            <ul>
+                <li>"I want something dark and psychological like Death Note"</li>
+                <li>"Give me a fun comedy isekai"</li>
+                <li>"Something emotional with great animation"</li>
+            </ul>
+            <p>What kind of anime are you looking for today? ⚔️</p>
+        `;
+        
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        messagesWrapper.appendChild(messageDiv);
+        messagesWrapper.scrollTop = 0;
+    }
+
+    /**
      * Set the loading state of the UI.
      */
     function setLoading(loading) {
@@ -355,7 +397,21 @@
      * Send the user's message to the API and display the response.
      */
     async function sendMessage(userMessage) {
-        appendMessage(userMessage, "user");
+        // Find current session and push user message to history
+        const session = sessions.find(s => s.id === sessionId);
+        if (session) {
+            session.messages.push({ role: "user", content: userMessage });
+            // Generate title from message if it's the first one
+            const userMessagesCount = session.messages.filter(m => m.role === "user").length;
+            if (session.title === "New Summoning" || userMessagesCount === 1) {
+                session.title = generateTitleFromMessage(userMessage);
+            }
+            saveSessions();
+            renderSidebar();
+        }
+
+        // Render user message bubble in DOM
+        appendMessageBubbleToDom(userMessage, "user");
         setLoading(true);
 
         // Create the assistant message element container for streaming
@@ -387,6 +443,9 @@
 
         let accumulatedResponse = "";
 
+        // Slice previous history to send (exclude the current message we just pushed)
+        const historyToSend = session ? session.messages.slice(0, -1) : [];
+
         try {
             // Disable smooth scrolling temporarily to prevent stutter/jitter during streaming
             messagesWrapper.style.scrollBehavior = "auto";
@@ -399,6 +458,7 @@
                 body: JSON.stringify({
                     message: userMessage,
                     session_id: sessionId,
+                    history: historyToSend
                 }),
             });
 
@@ -447,13 +507,263 @@
                     }
                 }
             }
+
+            // Save completed assistant message to history
+            if (session) {
+                session.messages.push({ role: "assistant", content: accumulatedResponse });
+                saveSessions();
+            }
+
         } catch (error) {
-            renderBlocks(parseResponseToBlocks(`⚠️ **Error:** ${error.message}. Please try again.`), contentDiv);
+            const errorMsg = `⚠️ **Error:** ${error.message}. Please try again.`;
+            renderBlocks(parseResponseToBlocks(errorMsg), contentDiv);
+            if (session) {
+                session.messages.push({ role: "assistant", content: errorMsg });
+                saveSessions();
+            }
         } finally {
             setLoading(false);
             messageInput.focus();
             // Restore smooth scrolling for normal page operations
             messagesWrapper.style.scrollBehavior = "smooth";
+        }
+    }
+
+    // --- History / Sessions Management Functions ---
+
+    /**
+     * Generate a UUID string for unique session tracking.
+     */
+    function generateUuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    /**
+     * Truncate and clean user message to make a neat session title.
+     */
+    function generateTitleFromMessage(message) {
+        if (!message) return "New Summoning";
+        const clean = message.trim()
+            .replace(/[#*`_\[\]]/g, "") // strip common markdown
+            .replace(/\s+/g, " ")
+            .substring(0, 30);
+        return clean.length < message.trim().length ? clean + "..." : clean;
+    }
+
+    /**
+     * Persist current state in client localStorage.
+     */
+    function saveSessions() {
+        localStorage.setItem("anibot_sessions", JSON.stringify(sessions));
+        localStorage.setItem("anibot_active_session_id", sessionId);
+        localStorage.setItem("anibot_anime_metadata", JSON.stringify(animeMetadata));
+    }
+
+    /**
+     * Create a brand new session object, register it, switch to it, and render the sidebar.
+     */
+    function createNewSession() {
+        const newId = generateUuid();
+        const newSession = {
+            id: newId,
+            title: "New Summoning",
+            timestamp: new Date().toISOString(),
+            messages: []
+        };
+        sessions.unshift(newSession);
+        saveSessions();
+        switchSession(newId);
+        renderSidebar();
+    }
+
+    /**
+     * Switch current conversation view to the specified session.
+     */
+    function switchSession(id) {
+        sessionId = id;
+        localStorage.setItem("anibot_active_session_id", sessionId);
+
+        // Highlight active session item
+        const items = sessionsList.querySelectorAll(".session-item");
+        items.forEach(item => {
+            if (item.getAttribute("data-session-id") === id) {
+                item.classList.add("active");
+            } else {
+                item.classList.remove("active");
+            }
+        });
+
+        // Clear existing messages and populate this session's history
+        const session = sessions.find(s => s.id === id);
+        messagesWrapper.innerHTML = "";
+
+        if (session && session.messages.length > 0) {
+            session.messages.forEach(msg => {
+                appendMessageBubbleToDom(msg.content, msg.role);
+            });
+        } else {
+            renderInitialWelcome();
+        }
+
+        // Close sidebar on mobile views
+        if (window.innerWidth <= 768) {
+            closeSidebar();
+        }
+    }
+
+    /**
+     * Delete session from memory and localStorage. If active, switch to next available.
+     */
+    function deleteSession(id) {
+        if (sessions.length <= 1) {
+            // Wiping the only session instead of deleting
+            const session = sessions[0];
+            session.title = "New Summoning";
+            session.timestamp = new Date().toISOString();
+            session.messages = [];
+            saveSessions();
+            switchSession(session.id);
+            renderSidebar();
+            return;
+        }
+
+        const index = sessions.findIndex(s => s.id === id);
+        if (index !== -1) {
+            sessions.splice(index, 1);
+            saveSessions();
+
+            // Switch session if deleting current active
+            if (id === sessionId) {
+                const newActiveId = sessions[0].id;
+                switchSession(newActiveId);
+            }
+
+            renderSidebar();
+        }
+    }
+
+    /**
+     * Render the list of session items inside the sidebar.
+     */
+    function renderSidebar() {
+        sessionsList.innerHTML = "";
+
+        sessions.forEach(session => {
+            const item = document.createElement("div");
+            item.className = "session-item";
+            if (session.id === sessionId) {
+                item.classList.add("active");
+            }
+            item.setAttribute("data-session-id", session.id);
+
+            const info = document.createElement("div");
+            info.className = "session-info";
+
+            const title = document.createElement("span");
+            title.className = "session-title";
+            title.textContent = session.title;
+
+            const date = new Date(session.timestamp);
+            const meta = document.createElement("span");
+            meta.className = "session-meta";
+            meta.textContent = date.toLocaleDateString(undefined, { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            info.appendChild(title);
+            info.appendChild(meta);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "session-delete-btn";
+            deleteBtn.title = "Delete Summoning";
+            deleteBtn.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            `;
+
+            deleteBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                deleteSession(session.id);
+            });
+
+            item.appendChild(info);
+            item.appendChild(deleteBtn);
+
+            item.addEventListener("click", function () {
+                if (session.id !== sessionId) {
+                    switchSession(session.id);
+                }
+            });
+
+            sessionsList.appendChild(item);
+        });
+    }
+
+    // --- Sidebar Visibility Controls ---
+
+    function toggleSidebar() {
+        layoutWrapper.classList.toggle("sidebar-collapsed");
+        sidebarBackdrop.classList.toggle("active");
+    }
+
+    function closeSidebar() {
+        layoutWrapper.classList.add("sidebar-collapsed");
+        sidebarBackdrop.classList.remove("active");
+    }
+
+    function openSidebar() {
+        layoutWrapper.classList.remove("sidebar-collapsed");
+        sidebarBackdrop.classList.add("active");
+    }
+
+    // --- Initialization ---
+
+    function initSessions() {
+        const stored = localStorage.getItem("anibot_sessions");
+        if (stored) {
+            try {
+                sessions = JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to parse sessions:", e);
+                sessions = [];
+            }
+        }
+        
+        const storedMetadata = localStorage.getItem("anibot_anime_metadata");
+        if (storedMetadata) {
+            try {
+                animeMetadata = JSON.parse(storedMetadata);
+            } catch (e) {
+                console.error("Failed to parse anime metadata:", e);
+                animeMetadata = {};
+            }
+        }
+
+        // If no sessions, create a default first one
+        if (sessions.length === 0) {
+            createNewSession();
+        } else {
+            const lastActiveId = localStorage.getItem("anibot_active_session_id");
+            const activeSession = sessions.find(s => s.id === lastActiveId) || sessions[0];
+            switchSession(activeSession.id);
+        }
+        
+        renderSidebar();
+
+        // Collapse sidebar on initial load if screen size is mobile/tablet
+        if (window.innerWidth <= 768) {
+            closeSidebar();
         }
     }
 
@@ -470,6 +780,14 @@
         sendMessage(message);
     });
 
-    // Focus input on page load
+    sidebarToggle.addEventListener("click", toggleSidebar);
+    sidebarCloseBtn.addEventListener("click", closeSidebar);
+    sidebarBackdrop.addEventListener("click", closeSidebar);
+    newChatBtn.addEventListener("click", createNewSession);
+
+    // Initialize application state
+    initSessions();
+    
+    // Focus input
     messageInput.focus();
 })();

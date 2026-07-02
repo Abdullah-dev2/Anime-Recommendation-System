@@ -37,6 +37,12 @@ app.add_middleware(
 # Mount static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Mount React built assets
+import os
+react_assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist", "assets"))
+os.makedirs(react_assets_dir, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=react_assets_dir), name="assets")
+
 # Register routers
 app.include_router(pages.router)
 app.include_router(api.router, prefix="/api")

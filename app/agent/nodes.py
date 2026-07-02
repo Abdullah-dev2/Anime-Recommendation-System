@@ -14,7 +14,8 @@ from app.services.openrouter import OPENROUTER_URL, call_openrouter
 
 logger = logging.getLogger(__name__)
 
-EXTRACTION_SYSTEM_PROMPT = """You are a preference extraction engine. Given a user's message about anime they want to watch, extract structured preferences as JSON.
+EXTRACTION_SYSTEM_PROMPT = """You are a preference extraction engine. Given a user's message and conversation history about anime they want to watch, extract their cumulative active preferences as JSON.
+Combine preferences from the history and the latest message. For example, if they previously asked for "dark psychological like Death Note" and now say "add some comedy", you should extract both psychological and comedy. If they change their request completely (e.g., "no, actually give me a romance slice of life instead"), discard the old preferences in favor of the new ones.
 
 Return ONLY a valid JSON object with exactly these keys:
 - "genres": array of genre strings (e.g., ["action", "psychological", "thriller"]). Use common genre names: action, adventure, comedy, drama, fantasy, horror, mystery, romance, sci-fi, slice of life, sports, supernatural, suspense, psychological, mecha, isekai, school, historical, military, thriller, detective, space, vampire, samurai, super power, mythology, martial arts, mahou shoujo, survival, time travel, reincarnation.
@@ -76,9 +77,26 @@ async def extract_preferences(state: dict) -> dict:
     user_message = state["user_message"]
     http_client = state["http_client"]
 
+    # Build history string of PREVIOUS turns only to give context to extraction
+    history_str = ""
+    history_messages = state.get("messages", [])
+    for msg in history_messages:
+        # Exclude the last message if it's the current user message (human)
+        # because we pass it explicitly as the latest message
+        if msg == history_messages[-1] and msg.type == "human":
+            continue
+        role = "User" if msg.type == "human" else "AniBot"
+        content = msg.content or ""
+        history_str += f"{role}: {content}\n"
+
+    if history_str:
+        user_content = f"Conversation History:\n{history_str}\nLatest User Message: {user_message}"
+    else:
+        user_content = user_message
+
     messages = [
         {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
-        {"role": "user", "content": user_message},
+        {"role": "user", "content": user_content},
     ]
 
     try:
@@ -424,18 +442,25 @@ async def generate_response(state: dict) -> dict:
 
     user_prompt = "\n".join(user_prompt_parts)
 
-    messages = [
-        {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
+    # Format message history to include prior conversational context for the LLM
+    llm_messages = [{"role": "system", "content": RESPONSE_SYSTEM_PROMPT}]
+    history_messages = state.get("messages", [])
+    for i, msg in enumerate(history_messages):
+        # Skip the last message if it's the user (human) message as we will send the rich user_prompt instead.
+        if i == len(history_messages) - 1 and msg.type == "human":
+            continue
+        role = "user" if msg.type == "human" else "assistant"
+        llm_messages.append({"role": role, "content": msg.content or ""})
+
+    # Append the rich user prompt as the final user message
+    llm_messages.append({"role": "user", "content": user_prompt})
 
     response_text = ""
-    async for chunk in stream_llm.astream({"messages": messages, "http_client": http_client}):
+    async for chunk in stream_llm.astream({"messages": llm_messages, "http_client": http_client}):
         response_text += chunk
 
     return {
         "messages": [
-            HumanMessage(content=user_message),
             AIMessage(content=response_text),
         ],
     }

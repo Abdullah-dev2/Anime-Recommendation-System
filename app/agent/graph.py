@@ -1,6 +1,7 @@
 """LangGraph graph compilation and execution entry point."""
 
 import httpx
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
 from app.agent.nodes import (
@@ -59,8 +60,8 @@ workflow.add_conditional_edges(
 workflow.add_edge("expand_search", "fetch_recommendations")
 workflow.add_edge("generate_response", END)
 
-# Compile
-agent = workflow.compile()
+# Compile with in-memory checkpointer for session tracking
+agent = workflow.compile(checkpointer=MemorySaver())
 
 
 async def run_agent(

@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from app.agent.graph import agent
 from app.config import settings
 from app.models import ChatRequest, ErrorResponse, HealthResponse
+from langchain_core.messages import AIMessage, HumanMessage
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,8 +26,22 @@ async def chat(request: Request, body: ChatRequest):
     session_id = body.session_id if body.session_id else str(uuid.uuid4())
     http_client = request.app.state.http_client
 
+    config = {"configurable": {"thread_id": session_id}}
+
+    # Pre-populate checkpoint memory if empty but client has history (recovers state after server restarts)
+    if body.history:
+        current_state = await agent.aget_state(config)
+        if not current_state.values:
+            recovered_messages = []
+            for msg in body.history:
+                if msg.role == "user":
+                    recovered_messages.append(HumanMessage(content=msg.content))
+                else:
+                    recovered_messages.append(AIMessage(content=msg.content))
+            await agent.aupdate_state(config, {"messages": recovered_messages})
+
     initial_state = {
-        "messages": [],
+        "messages": [HumanMessage(content=body.message)],
         "user_message": body.message,
         "session_id": session_id,
         "genres": [],
@@ -49,7 +64,7 @@ async def chat(request: Request, body: ChatRequest):
             filtered_titles = []
             anime_results = []
             
-            async for event in agent.astream_events(initial_state, version="v2"):
+            async for event in agent.astream_events(initial_state, config, version="v2"):
                 # Track node outputs to gather metadata
                 if event["event"] == "on_chain_end":
                     output = event.get("data", {}).get("output", {})
