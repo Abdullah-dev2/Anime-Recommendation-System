@@ -1,0 +1,52 @@
+[
+    {
+        "mal_id": 1535,
+        "title": "Death Note",
+        "synopsis": "Brutal murders, extract kidnappings, and planned suicides: these are only a few of the atrocities that form the basis of the detective mystery thriller Death Note. A high school genius named Light Yagami discovers a supernatural notebook that grants them the power to kill anyone whose name he writes in it.",
+        "score": 8.62,
+        "episodes": 37,
+        "url": "https://myanimelist.net/anime/1535/Death_Note",
+        "image_url": "https://cdn.myanimelist.net/images/anime/9/9453.jpg",
+        "genres": ["Supernatural", "Suspense"]
+    },
+    {
+        "mal_id": 16498,
+        "title": "Shingeki no Kyojin",
+        "synopsis": "Centuries ago, mankind was slaughtered to near extinction by monstrous humanoid creatures called Titans, forcing humans to hide in fear behind enormous concentric walls. Attack on Titan follows Eren Yeager as he vows to exterminate the Titans after a Colossal Titan breaches the wall of his hometown.",
+        "score": 8.53,
+        "episodes": 25,
+        "url": "https://myanimelist.net/anime/16498/Shingeki_no_Kyojin",
+        "image_url": "https://cdn.myanimelist.net/images/anime/10/47347.jpg",
+        "genres": ["Action", "Drama", "Suspense"]
+    },
+    {
+        "mal_id": 11061,
+        "title": "Hunter x Hunter (2011)",
+        "synopsis": "Twelve-year-old Gon Freecss one day discovers that the father he had always been told was dead was alive. His Father, Ging, is a Hunter — a member of society's elite with a license to go anywhere or do almost anything. Gon is determined to find his father and become a Hunter himself.",
+        "score": 9.04,
+        "episodes": 148,
+        "url": "https://myanimelist.net/anime/11061/Hunter_x_Hunter_2011",
+        "image_url": "https://cdn.myanimelist.net/images/anime/1337/99013.jpg",
+        "genres": ["Action", "Adventure", "Fantasy"]
+    },
+    {
+        "mal_id": 9253,
+        "title": "Steins;Gate",
+        "synopsis": "Eccentric scientist Rintarou Okabe has a never-ending thirst for scientific exploration. Together with his ditzy but well-meaning friend Mayuri Shiina and fellow lab member Itaru Hashida, Rintarou founds the Future Gadget Laboratory in the hopes of creating technological innovations that baffle the human psyche.",
+        "score": 9.07,
+        "episodes": 24,
+        "url": "https://myanimelist.net/anime/9253/Steins_Gate",
+        "image_url": "https://cdn.myanimelist.net/images/anime/5/73199.jpg",
+        "genres": ["Drama", "Sci-Fi", "Suspense"]
+    },
+    {
+        "mal_id": 21,
+        "title": "One Punch Man",
+        "synopsis": "The seemingly unimpressive Saitama has a rather unique hobby: being a hero. In order to pursue his childhood dream, Saitama relentlessly trained for three years, losing all of his hair in the process. Now, Saitama is so powerful that he can defeat any enemy with a single punch.",
+        "score": 8.50,
+        "episodes": 12,
+        "url": "https://myanimelist.net/anime/30276/One_Punch_Man",
+        "image_url": "https://cdn.myanimelist.net/images/anime/12/76049.jpg",
+        "genres": ["Action", "Comedy"]
+    }
+]
